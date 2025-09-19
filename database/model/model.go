@@ -3,8 +3,8 @@ package model
 import (
 	"fmt"
 
-	"x-ui/util/json_util"
-	"x-ui/xray"
+	"github.com/mhsanaei/3x-ui/v2/util/json_util"
+	"github.com/mhsanaei/3x-ui/v2/xray"
 )
 
 type Protocol string
@@ -12,11 +12,11 @@ type Protocol string
 const (
 	VMESS       Protocol = "vmess"
 	VLESS       Protocol = "vless"
-	DOKODEMO    Protocol = "dokodemo-door"
+	Tunnel      Protocol = "tunnel"
 	HTTP        Protocol = "http"
 	Trojan      Protocol = "trojan"
 	Shadowsocks Protocol = "shadowsocks"
-	Socks       Protocol = "socks"
+	Mixed       Protocol = "mixed"
 	WireGuard   Protocol = "wireguard"
 )
 
@@ -27,15 +27,18 @@ type User struct {
 }
 
 type Inbound struct {
-	Id          int                  `json:"id" form:"id" gorm:"primaryKey;autoIncrement"`
-	UserId      int                  `json:"-"`
-	Up          int64                `json:"up" form:"up"`
-	Down        int64                `json:"down" form:"down"`
-	Total       int64                `json:"total" form:"total"`
-	Remark      string               `json:"remark" form:"remark"`
-	Enable      bool                 `json:"enable" form:"enable"`
-	ExpiryTime  int64                `json:"expiryTime" form:"expiryTime"`
-	ClientStats []xray.ClientTraffic `gorm:"foreignKey:InboundId;references:Id" json:"clientStats" form:"clientStats"`
+	Id                   int                  `json:"id" form:"id" gorm:"primaryKey;autoIncrement"`
+	UserId               int                  `json:"-"`
+	Up                   int64                `json:"up" form:"up"`
+	Down                 int64                `json:"down" form:"down"`
+	Total                int64                `json:"total" form:"total"`
+	AllTime              int64                `json:"allTime" form:"allTime" gorm:"default:0"`
+	Remark               string               `json:"remark" form:"remark"`
+	Enable               bool                 `json:"enable" form:"enable" gorm:"index:idx_enable_traffic_reset,priority:1"`
+	ExpiryTime           int64                `json:"expiryTime" form:"expiryTime"`
+	TrafficReset         string               `json:"trafficReset" form:"trafficReset" gorm:"default:never;index:idx_enable_traffic_reset,priority:2"`
+	LastTrafficResetTime int64                `json:"lastTrafficResetTime" form:"lastTrafficResetTime" gorm:"default:0"`
+	ClientStats          []xray.ClientTraffic `gorm:"foreignKey:InboundId;references:Id" json:"clientStats" form:"clientStats"`
 
 	// config part
 	Listen         string   `json:"listen" form:"listen"`
@@ -45,7 +48,6 @@ type Inbound struct {
 	StreamSettings string   `json:"streamSettings" form:"streamSettings"`
 	Tag            string   `json:"tag" form:"tag" gorm:"unique"`
 	Sniffing       string   `json:"sniffing" form:"sniffing"`
-	Allocate       string   `json:"allocate" form:"allocate"`
 }
 
 type OutboundTraffics struct {
@@ -80,7 +82,6 @@ func (i *Inbound) GenXrayInboundConfig() *xray.InboundConfig {
 		StreamSettings: json_util.RawMessage(i.StreamSettings),
 		Tag:            i.Tag,
 		Sniffing:       json_util.RawMessage(i.Sniffing),
-		Allocate:       json_util.RawMessage(i.Allocate),
 	}
 }
 
@@ -104,4 +105,13 @@ type Client struct {
 	SubID      string `json:"subId" form:"subId"`
 	Comment    string `json:"comment" form:"comment"`
 	Reset      int    `json:"reset" form:"reset"`
+	CreatedAt  int64  `json:"created_at,omitempty"`
+	UpdatedAt  int64  `json:"updated_at,omitempty"`
+}
+
+type VLESSSettings struct {
+	Clients    []Client `json:"clients"`
+	Decryption string   `json:"decryption"`
+	Encryption string   `json:"encryption"`
+	Fallbacks  []any    `json:"fallbacks"`
 }

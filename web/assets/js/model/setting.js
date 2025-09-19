@@ -7,7 +7,7 @@ class AllSetting {
         this.webCertFile = "";
         this.webKeyFile = "";
         this.webBasePath = "/";
-        this.sessionMaxAge = 60;
+        this.sessionMaxAge = 360;
         this.pageSize = 50;
         this.expireDiff = 0;
         this.trafficDiff = 0;
@@ -26,7 +26,8 @@ class AllSetting {
         this.twoFactorEnable = false;
         this.twoFactorToken = "";
         this.xrayTemplateConfig = "";
-        this.subEnable = false;
+        this.subEnable = true;
+        this.subJsonEnable = false;
         this.subTitle = "";
         this.subListen = "";
         this.subPort = 2096;
